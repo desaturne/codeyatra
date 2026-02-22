@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import { useLiveQuery } from "dexie-react-hooks";
 import db from "../lib/db";
 import Mascot from "../components/Mascot";
 
@@ -19,6 +20,7 @@ function MaternalRegister() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const inventoryItems = useLiveQuery(() => db.inventory.toArray()) || [];
 
   const [form, setForm] = useState({
     name: "",
@@ -32,6 +34,7 @@ function MaternalRegister() {
     weight: "",
     bloodPressure: "",
     symptoms: [],
+    medicinesProvided: [],
   });
 
   const handleChange = (field) => (e) => {
@@ -44,6 +47,15 @@ function MaternalRegister() {
       symptoms: f.symptoms.includes(symptom)
         ? f.symptoms.filter((s) => s !== symptom)
         : [...f.symptoms, symptom],
+    }));
+  };
+
+  const handleMedicineToggle = (medicineId) => {
+    setForm((f) => ({
+      ...f,
+      medicinesProvided: f.medicinesProvided.includes(medicineId)
+        ? f.medicinesProvided.filter((id) => id !== medicineId)
+        : [...f.medicinesProvided, medicineId],
     }));
   };
 
@@ -80,6 +92,25 @@ function MaternalRegister() {
         payload: record,
         createdAt: new Date().toISOString(),
       });
+
+      // Deduct stock for selected medicines
+      for (const medicineId of form.medicinesProvided) {
+        const item = await db.inventory.get(medicineId);
+        if (item && item.stock > 0) {
+          const newStock = item.stock - 1;
+          await db.inventory.update(medicineId, {
+            stock: newStock,
+            updatedAt: new Date().toISOString()
+          });
+          await db.syncQueue.add({
+            operation: "PUT",
+            table: "inventory",
+            recordId: medicineId,
+            payload: { stock: newStock },
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
 
       toast.success(t("Successfully Registered Maternal Data"));
       navigate("/");
@@ -324,6 +355,37 @@ function MaternalRegister() {
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 700, color: "#F5F0EB", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      MEDICINES PROVIDED
+                    </label>
+                    {inventoryItems.length === 0 ? (
+                      <p style={{ fontSize: "0.875rem", color: "#C9B99A", fontStyle: "italic" }}>
+                        No medicines available in inventory.
+                      </p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        {inventoryItems.map((medicine) => (
+                          <label
+                            key={medicine.id}
+                            style={{ display: "flex", alignItems: "center", gap: "12px", cursor: medicine.stock > 0 ? "pointer" : "not-allowed", opacity: medicine.stock > 0 ? 1 : 0.5 }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.medicinesProvided.includes(medicine.id)}
+                              onChange={() => handleMedicineToggle(medicine.id)}
+                              disabled={medicine.stock <= 0}
+                              style={{ width: "20px", height: "20px", accentColor: "#5E503C", flexShrink: 0 }}
+                            />
+                            <span style={{ fontSize: "0.875rem", color: "#F5F0EB" }}>
+                              {medicine.name} <span style={{ color: "#C9B99A", fontSize: "0.75rem", marginLeft: "4px" }}>(Stock: {medicine.stock})</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <button
