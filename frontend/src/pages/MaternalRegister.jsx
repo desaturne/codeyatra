@@ -81,7 +81,7 @@ function MaternalRegister() {
         createdAt: new Date().toISOString(),
       });
 
-      toast.success(t("Successfully Registered"));
+      toast.success(t("Successfully Registered Maternal Data"));
       navigate("/");
     } catch {
       toast.error(t("toast.error"));

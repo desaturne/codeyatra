@@ -1,120 +1,28 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import db from "../lib/db";
 import useInventoryStore from "../store/useInventoryStore";
+import Mascot from "../components/Mascot";
 
-function getStockStatus(item) {
+function getRowStatus(item) {
   const now = new Date();
   const expiry = new Date(item.expiryDate);
   const daysUntilExpiry = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-
-  if (item.stock === 0 || daysUntilExpiry <= 0) return "red";
-  if (item.stock < item.threshold || daysUntilExpiry <= 30) return "yellow";
-  return "green";
+  if (daysUntilExpiry <= 0) return "expired";
+  if (daysUntilExpiry <= 30) return "nearExpiry";
+  return "normal";
 }
-
-function getStatusLabel(item, t) {
-  const now = new Date();
-  const expiry = new Date(item.expiryDate);
-  const daysUntilExpiry = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-
-  if (daysUntilExpiry <= 0) return t("tracker.expired");
-  if (item.stock === 0) return t("tracker.outOfStock");
-  if (daysUntilExpiry <= 30) return t("tracker.expiringSoon");
-  if (item.stock < item.threshold) return t("tracker.lowStock");
-  return null;
-}
-
-const statusColors = {
-  green: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  yellow: "bg-amber-100 text-amber-700 border-amber-200",
-  red: "bg-red-100 text-red-700 border-red-200",
-};
-
-const dotColors = {
-  green: "bg-emerald-500",
-  yellow: "bg-amber-500",
-  red: "bg-red-500",
-};
 
 function Tracker() {
-  const { t } = useTranslation();
+  const navigate = useNavigate();
   const items = useLiveQuery(() => db.inventory.toArray()) || [];
   const { setItems } = useInventoryStore();
-  const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    stock: "",
-    threshold: "",
-    expiryDate: "",
-  });
-
-  const resetForm = () => {
-    setForm({ name: "", stock: "", threshold: "", expiryDate: "" });
-    setEditingItem(null);
-    setShowModal(false);
-  };
-
-  const openAddModal = () => {
-    resetForm();
-    setShowModal(true);
-  };
-
-  const openEditModal = (item) => {
-    setEditingItem(item);
-    setForm({
-      name: item.name,
-      stock: String(item.stock),
-      threshold: String(item.threshold),
-      expiryDate: item.expiryDate,
-    });
-    setShowModal(true);
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    const payload = {
-      name: form.name,
-      stock: parseInt(form.stock, 10),
-      threshold: parseInt(form.threshold, 10),
-      expiryDate: form.expiryDate,
-      updatedAt: new Date().toISOString(),
-    };
-
-    try {
-      if (editingItem) {
-        await db.inventory.update(editingItem.id, payload);
-        await db.syncQueue.add({
-          operation: "PUT",
-          table: "inventory",
-          recordId: editingItem.id,
-          payload,
-          createdAt: new Date().toISOString(),
-        });
-      } else {
-        payload.createdAt = new Date().toISOString();
-        const id = await db.inventory.add(payload);
-        await db.syncQueue.add({
-          operation: "POST",
-          table: "inventory",
-          recordId: id,
-          payload,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      const updatedItems = await db.inventory.toArray();
-      setItems(updatedItems);
-      toast.success(t("toast.savedLocally"));
-      resetForm();
-    } catch {
-      toast.error(t("toast.error"));
-    }
-  };
+  const [longPressId, setLongPressId] = useState(null);
+  const longPressTimer = useRef(null);
+  const isLongPress = useRef(false);
 
   const handleDelete = async (id) => {
     try {
@@ -128,210 +36,214 @@ function Tracker() {
       });
       const updatedItems = await db.inventory.toArray();
       setItems(updatedItems);
-      toast.success(t("toast.deletedLocally"));
+      setLongPressId(null);
+      toast.success("Deleted successfully");
     } catch {
-      toast.error(t("toast.error"));
+      toast.error("Something went wrong");
     }
   };
 
+  const handleStockChange = useCallback(async (id, delta) => {
+    try {
+      const item = await db.inventory.get(id);
+      if (!item) return;
+      const newStock = Math.max(0, item.stock + delta);
+      await db.inventory.update(id, { stock: newStock, updatedAt: new Date().toISOString() });
+      await db.syncQueue.add({
+        operation: "PUT",
+        table: "inventory",
+        recordId: id,
+        payload: { stock: newStock },
+        createdAt: new Date().toISOString(),
+      });
+      const updatedItems = await db.inventory.toArray();
+      setItems(updatedItems);
+    } catch {
+      toast.error("Something went wrong");
+    }
+  }, [setItems]);
+
+  const startLongPress = useCallback((id) => {
+    isLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPress.current = true;
+      setLongPressId((prev) => (prev === id ? null : id));
+    }, 600);
+  }, []);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleRowClick = useCallback((id) => {
+    if (isLongPress.current) {
+      isLongPress.current = false;
+      return;
+    }
+    setLongPressId(null);
+  }, []);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}/${m}/${day}`;
+  };
+
+  const getRowBg = (item) => {
+    const status = getRowStatus(item);
+    if (status === "expired") return "#F8D7DA";
+    if (status === "nearExpiry") return "#FFF9C4";
+    return "#9ac99bff";
+  };
+
+  const getRowColor = (item) => {
+    const status = getRowStatus(item);
+    if (status === "expired") return "#721C24";
+    if (status === "nearExpiry") return "#856404";
+    return "#3E3425";
+  };
+
+  const stockBtnStyle = {
+    width: "22px",
+    height: "22px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    background: "#5E503C",
+    color: "#F5F0EB",
+    border: "none",
+    cursor: "pointer",
+    flexShrink: 0,
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    padding: 0,
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-800">
-          {t("tracker.title")}
-        </h2>
+    <div style={{ height: "100dvh", background: "#D6CDB8", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 8px 16px", maxWidth: "32rem", margin: "0 auto", width: "100%", flexShrink: 0 }}>
         <button
-          onClick={openAddModal}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 active:bg-emerald-800 transition-colors min-h-[44px]"
+          onClick={() => navigate("/dashboard")}
+          style={{ width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "#fff", color: "#5E503C", border: "none", boxShadow: "0 1px 2px rgba(0,0,0,0.1)", cursor: "pointer" }}
+          aria-label="Go back"
         >
-          <Plus size={18} />
-          {t("tracker.addMedicine")}
+          <ArrowLeft size={18} />
         </button>
+
+        <img
+          src="/assets/logo.png"
+          alt="AASHA"
+          style={{ height: "60px", width: "60px", objectFit: "contain" }}
+        />
       </div>
 
-      {items.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Plus size={24} className="text-slate-400" />
-          </div>
-          <p className="text-slate-500">{t("tracker.noItems")}</p>
+      <div style={{ display: "flex", alignItems: "center", padding: "20px 24px 14px 24px", maxWidth: "32rem", margin: "0 auto", width: "100%", flexShrink: 0, gap: "8px" }}>
+        <div style={{ width: "120px", height: "120px", flexShrink: 0 }}>
+          <Mascot size="md" height="120px" width="120px"/>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {items.map((item) => {
-            const status = getStockStatus(item);
-            const label = getStatusLabel(item, t);
-            return (
-              <div
-                key={item.id}
-                className={`p-4 bg-white rounded-xl border ${statusColors[status]} shadow-sm`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-2.5 h-2.5 rounded-full ${dotColors[status]}`}
-                      />
-                      <h3 className="font-semibold text-slate-800">
-                        {item.name}
-                      </h3>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-600">
-                      <span>
-                        {t("tracker.stock")}: {item.stock}
-                      </span>
-                      <span>
-                        {t("tracker.threshold")}: {item.threshold}
-                      </span>
-                      <span>
-                        {t("tracker.expiryDate")}: {item.expiryDate}
-                      </span>
-                    </div>
-                    {label && (
-                      <span
-                        className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status]}`}
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#3E3425", lineHeight: 1.15, letterSpacing: "0.05em", textAlign: "center", flex: 1, paddingTop: "8px" }}>
+          TRACKER
+        </h1>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", maxWidth: "32rem", margin: "0 auto", width: "100%", padding: "0 20px 24px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+          <button
+            onClick={() => navigate("/add")}
+            style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "#5E503C", color: "#F5F0EB", border: "none", boxShadow: "0 2px 6px rgba(0,0,0,0.15)", cursor: "pointer" }}
+            aria-label="Add medicine"
+          >
+            <Plus size={18} />
+          </button>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, background: "#5E503C", borderRadius: "24px", overflowY: "auto", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", msOverflowStyle: "none" }}>
+          <div style={{ padding: "0" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "16px 12px", fontSize: "0.8rem", fontWeight: 800, color: "#F5F0EB", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", borderBottom: "2px solid #C9B99A", width: "34%" }}>
+                    NAME
+                  </th>
+                  <th style={{ padding: "16px 12px", fontSize: "0.8rem", fontWeight: 800, color: "#F5F0EB", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", borderBottom: "2px solid #C9B99A", width: "34%" }}>
+                    EXPIRY DATE
+                  </th>
+                  <th style={{ padding: "16px 12px", fontSize: "0.8rem", fontWeight: 800, color: "#F5F0EB", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", borderBottom: "2px solid #C9B99A", width: "32%" }}>
+                    STOCK
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{ padding: "40px 16px", textAlign: "center", color: "#C9B99A", fontSize: "0.875rem" }}>
+                      No medicines added yet
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => {
+                    const isLongPressed = longPressId === item.id;
+                    return (
+                      <tr
+                        key={item.id}
+                        onMouseDown={() => startLongPress(item.id)}
+                        onMouseUp={cancelLongPress}
+                        onMouseLeave={cancelLongPress}
+                        onTouchStart={() => startLongPress(item.id)}
+                        onTouchEnd={cancelLongPress}
+                        onClick={() => handleRowClick(item.id)}
+                        style={{ background: getRowBg(item), cursor: "pointer", transition: "background 0.2s ease" }}
                       >
-                        {label}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 ml-2">
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="p-2.5 rounded-lg hover:bg-slate-100 active:bg-slate-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      aria-label={t("tracker.edit")}
-                    >
-                      <Pencil size={16} className="text-slate-500" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2.5 rounded-lg hover:bg-red-50 active:bg-red-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      aria-label={t("tracker.delete")}
-                    >
-                      <Trash2 size={16} className="text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-800">
-                {editingItem ? t("tracker.edit") : t("tracker.addMedicine")}
-              </h3>
-              <button
-                onClick={resetForm}
-                className="p-2 rounded-lg hover:bg-slate-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-3">
-              <div>
-                <label
-                  htmlFor="med-name"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  {t("tracker.name")}
-                </label>
-                <input
-                  id="med-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="med-stock"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
-                    {t("tracker.stock")}
-                  </label>
-                  <input
-                    id="med-stock"
-                    type="number"
-                    min="0"
-                    value={form.stock}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, stock: e.target.value }))
-                    }
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="med-threshold"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
-                    {t("tracker.threshold")}
-                  </label>
-                  <input
-                    id="med-threshold"
-                    type="number"
-                    min="0"
-                    value={form.threshold}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, threshold: e.target.value }))
-                    }
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="med-expiry"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  {t("tracker.expiryDate")}
-                </label>
-                <input
-                  id="med-expiry"
-                  type="date"
-                  value={form.expiryDate}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, expiryDate: e.target.value }))
-                  }
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-base"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="flex-1 py-3 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-colors min-h-[44px]"
-                >
-                  {t("tracker.cancel")}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors min-h-[44px]"
-                >
-                  {t("tracker.save")}
-                </button>
-              </div>
-            </form>
+                        <td style={{ padding: "14px 12px", fontSize: "0.85rem", fontWeight: 600, color: getRowColor(item), textAlign: "center", borderBottom: "1px solid rgba(94,80,60,0.15)" }}>
+                          {isLongPressed ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", background: "#dc3545", color: "#fff", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, margin: "0 auto" }}
+                            >
+                              <Trash2 size={12} />
+                              Delete
+                            </button>
+                          ) : (
+                            <span>{item.name}</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "14px 12px", fontSize: "0.85rem", fontWeight: 600, color: getRowColor(item), textAlign: "center", borderBottom: "1px solid rgba(94,80,60,0.15)" }}>
+                          {formatDate(item.expiryDate)}
+                        </td>
+                        <td style={{ padding: "14px 6px", fontSize: "0.85rem", fontWeight: 600, color: getRowColor(item), textAlign: "center", borderBottom: "1px solid rgba(94,80,60,0.15)" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleStockChange(item.id, -1); }}
+                              style={stockBtnStyle}
+                              aria-label="Decrease stock"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span style={{ minWidth: "24px", textAlign: "center" }}>{item.stock}</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleStockChange(item.id, 1); }}
+                              style={stockBtnStyle}
+                              aria-label="Increase stock"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

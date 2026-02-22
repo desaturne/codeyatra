@@ -6,6 +6,7 @@ import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import Tracker from "../pages/Tracker";
+import AddMedicine from "../pages/AddMedicine";
 import Register from "../pages/Register";
 import MaternalRegister from "../pages/MaternalRegister";
 import ChildRegister from "../pages/ChildRegister";
@@ -49,6 +50,14 @@ function AppRoutes() {
           element: (
             <ProtectedRoute>
               <Tracker />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/add",
+          element: (
+            <ProtectedRoute>
+              <AddMedicine />
             </ProtectedRoute>
           ),
         },

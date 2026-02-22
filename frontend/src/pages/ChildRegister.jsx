@@ -86,7 +86,7 @@ function ChildRegister() {
         createdAt: new Date().toISOString(),
       });
 
-      toast.success(t("Successfully Registered"));
+      toast.success(t("Successfully Registered Child Data"));
       navigate("/");
     } catch {
       toast.error(t("toast.error"));
