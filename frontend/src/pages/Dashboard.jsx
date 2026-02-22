@@ -1,17 +1,35 @@
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import toast from "react-hot-toast";
+import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
+
+  const handleLogout = () => {
+    toast.success("You're logging out. You need to sign back in!");
+    logout();
+    navigate("/welcome");
+  };
 
   return (
     <div className="h-screen bg-[#D6CDB8] flex flex-col overflow-hidden">
-      <div className="h-1.5"></div>
+      <header className="flex items-center justify-between px-6 py-6 max-w-lg mx-auto w-full shrink-0">
         <img
           src="/assets/logo.png"
           alt="AASHA"
-          className="h-20 w-20 mt-6"
+          className="h-20 w-20 object-contain"
         />
+        <button
+          onClick={handleLogout}
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-white text-[#5E503C] shadow-sm hover:bg-gray-50 transition-colors"
+          aria-label="Log out"
+        >
+          <LogOut size={20} />
+        </button>
+      </header>
 
       <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full px-6">
         <div className="flex flex-col items-center w-full gap-6">
