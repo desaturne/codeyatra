@@ -7,6 +7,8 @@ import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import Tracker from "../pages/Tracker";
 import Register from "../pages/Register";
+import MaternalRegister from "../pages/MaternalRegister";
+import ChildRegister from "../pages/ChildRegister";
 import ProtectedRoute from "./ProtectedRoute";
 import useAuthStore from "../store/useAuthStore";
 
@@ -55,6 +57,22 @@ function AppRoutes() {
           element: (
             <ProtectedRoute>
               <Register />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/register/maternal",
+          element: (
+            <ProtectedRoute>
+              <MaternalRegister />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/register/child",
+          element: (
+            <ProtectedRoute>
+              <ChildRegister />
             </ProtectedRoute>
           ),
         },
