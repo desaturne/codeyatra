@@ -13,10 +13,10 @@ function Mascot({ size = "lg", variant = "circle" }) {
   }
 
   const outer =
-    size === "xl" ? "w-72 h-72" : size === "lg" ? "w-52 h-52" : "w-32 h-32";
+    size === "xl" ? "w-72 h-72" : size === "lg" ? "w-52 h-52" : size === "sm" ? "w-24 h-24" : "w-32 h-32";
 
   const circle =
-    size === "xl" ? "w-48 h-48" : size === "lg" ? "w-36 h-36" : "w-20 h-20";
+    size === "xl" ? "w-48 h-48" : size === "lg" ? "w-36 h-36" : size === "sm" ? "w-16 h-16" : "w-20 h-20";
 
   return (
     <div className={`${outer} relative mx-auto`}>
