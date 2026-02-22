@@ -1,76 +1,42 @@
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { UserPlus, Pill, RefreshCw } from "lucide-react";
-import { useLiveQuery } from "dexie-react-hooks";
-import useAuthStore from "../store/useAuthStore";
-import db from "../lib/db";
+import Mascot from "../components/Mascot";
 
 function Dashboard() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isOnline } = useAuthStore();
-  const pendingSync = useLiveQuery(() => db.syncQueue.count()) || 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-slate-800">
-          {t("dashboard.welcome")}
-        </h2>
-        <p className="text-slate-500 text-sm mt-1">FCHV Health Portal</p>
-      </div>
+    <div className="h-screen bg-[#D6CDB8] flex flex-col overflow-hidden">
+      <div className="h-1.5"></div>
+        <img
+          src="/assets/logo.png"
+          alt="AASHA"
+          className="h-20 w-20 mt-6"
+        />
 
-      <div className="grid gap-4">
-        <button
-          onClick={() => navigate("/register")}
-          className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-200 active:bg-slate-50 transition-all text-left min-h-[44px]"
-        >
-          <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-            <UserPlus size={24} className="text-emerald-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-800 text-base">
-              {t("dashboard.registerPatient")}
-            </h3>
-            <p className="text-slate-500 text-sm mt-0.5">
-              {t("dashboard.registerPatientDesc")}
-            </p>
-          </div>
-        </button>
+      <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full px-6">
+        <div className="flex flex-col items-center w-full gap-6">
+          <Mascot size="xl" variant="circle" />
 
-        <button
-          onClick={() => navigate("/tracker")}
-          className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 active:bg-slate-50 transition-all text-left min-h-[44px]"
-        >
-          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-            <Pill size={24} className="text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-800 text-base">
-              {t("dashboard.medicineTracker")}
-            </h3>
-            <p className="text-slate-500 text-sm mt-0.5">
-              {t("dashboard.medicineTrackerDesc")}
-            </p>
-          </div>
-        </button>
-      </div>
+          <h1 className="text-2xl font-extrabold text-[#3E3425] tracking-[0.25em] text-center uppercase">
+            WELCOME HOME!
+          </h1>
 
-      {pendingSync > 0 && (
-        <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <div className="flex items-center gap-2">
-            <RefreshCw size={16} className="text-amber-600" />
-            <span className="text-sm text-amber-800 font-medium">
-              {pendingSync} {t("sync.pending")}
-            </span>
-          </div>
-          {isOnline && (
-            <button className="text-sm font-semibold text-amber-700 hover:text-amber-900 min-w-[44px] min-h-[44px] flex items-center justify-center">
-              {t("sync.syncNow")}
+          <div className="w-full flex flex-col items-center gap-4 mt-4 px-2">
+            <button
+              onClick={() => navigate("/register")}
+              className="w-60 h-12 py-4 px-20 bg-[#5E503C] text-[#F5F0EB] font-bold rounded-full text-base uppercase tracking-wider hover:bg-[#4a3f30] transition-colors"
+            >
+              REGISTER
             </button>
-          )}
+            <button
+              onClick={() => navigate("/tracker")}
+              className="w-60 h-12 py-4 bg-white text-[#3E3425] font-bold rounded-full text-base uppercase tracking-wider hover:bg-gray-100 transition-colors"
+            >
+              TRACKER
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
