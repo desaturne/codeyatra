@@ -23,7 +23,6 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const mockToken = btoa(`${form.email}:${Date.now()}`);
       setToken(mockToken);
@@ -37,22 +36,19 @@ function Signup() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="flex justify-center w-full">
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "8px" }}>
         <Mascot size="lg" variant="circle" />
       </div>
 
-      <h2 className="mt-3 text-lg font-bold text-[#3D3024]">
+      <h2 style={{ marginTop: "16px", fontSize: "20px", fontWeight: "700", color: "#3D3024", letterSpacing: "0.02em", textAlign: "center" }}>
         {t("signup.title")}
       </h2>
 
-      <div className="w-full mt-4 bg-[#5E503C] rounded-2xl p-5 space-y-3">
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label
-              htmlFor="signup-name"
-              className="block text-xs font-semibold text-white mb-1"
-            >
+      <div style={{ width: "100%", marginTop: "20px", backgroundColor: "#5E503C", borderRadius: "16px", padding: "20px" }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "14px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#ffffff", marginBottom: "7px" }}>
               {t("signup.name")}
             </label>
             <input
@@ -61,16 +57,13 @@ function Signup() {
               value={form.name}
               onChange={handleChange("name")}
               required
-              className="w-full px-4 py-2 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-[#3D3024] text-sm text-[#3D3024] placeholder-[#A09585] text-center"
               placeholder={t("signup.namePlaceholder")}
+              style={{ width: "100%", padding: "10px 16px", backgroundColor: "#ffffff", border: "none", borderRadius: "999px", fontSize: "13px", color: "#3D3024", textAlign: "center", outline: "none", boxSizing: "border-box" }}
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="signup-dob"
-              className="block text-xs font-semibold text-white mb-1"
-            >
+          <div style={{ marginBottom: "14px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#ffffff", marginBottom: "7px" }}>
               {t("signup.dob")}
             </label>
             <input
@@ -79,19 +72,14 @@ function Signup() {
               value={form.dob}
               onChange={handleChange("dob")}
               onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = "text";
-              }}
-              className="w-full px-4 py-2 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-[#3D3024] text-sm text-[#3D3024] placeholder-[#A09585] text-center"
+              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
               placeholder="dd/mm/yyyy"
+              style={{ width: "100%", padding: "10px 16px", backgroundColor: "#ffffff", border: "none", borderRadius: "999px", fontSize: "13px", color: "#3D3024", textAlign: "center", outline: "none", boxSizing: "border-box" }}
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="signup-email"
-              className="block text-xs font-semibold text-white mb-1"
-            >
+          <div style={{ marginBottom: "14px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#ffffff", marginBottom: "7px" }}>
               {t("login.email")}
             </label>
             <input
@@ -100,16 +88,13 @@ function Signup() {
               value={form.email}
               onChange={handleChange("email")}
               required
-              className="w-full px-4 py-2 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-[#3D3024] text-sm text-[#3D3024] placeholder-[#A09585] text-center"
-              placeholder={t("login.emailPlaceholder")}
+              placeholder="username@gmail.com"
+              style={{ width: "100%", padding: "10px 16px", backgroundColor: "#ffffff", border: "none", borderRadius: "999px", fontSize: "13px", color: "#3D3024", textAlign: "center", outline: "none", boxSizing: "border-box" }}
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="signup-password"
-              className="block text-xs font-semibold text-white mb-1"
-            >
+          <div style={{ marginBottom: "14px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#ffffff", marginBottom: "7px" }}>
               {t("login.password")}
             </label>
             <input
@@ -118,16 +103,16 @@ function Signup() {
               value={form.password}
               onChange={handleChange("password")}
               required
-              className="w-full px-4 py-2 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-[#3D3024] text-sm text-[#3D3024] placeholder-[#A09585] text-center"
               placeholder={t("login.passwordPlaceholder")}
+              style={{ width: "100%", padding: "10px 16px", backgroundColor: "#ffffff", border: "none", borderRadius: "999px", fontSize: "13px", color: "#3D3024", textAlign: "center", outline: "none", boxSizing: "border-box" }}
             />
           </div>
 
-          <div className="flex justify-center pt-2">
+          <div style={{ display: "flex", justifyContent: "center", marginTop: "10px" }}>
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-2 bg-[#3D3024] text-white text-sm font-semibold rounded-full hover:bg-[#2C2218] active:bg-[#1E160F] disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[40px]"
+              style={{ padding: "11px 40px", backgroundColor: "#3D3024", color: "#ffffff", fontSize: "14px", fontWeight: "600", border: "none", borderRadius: "999px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1, minWidth: "130px" }}
             >
               {loading ? "..." : t("signup.submit")}
             </button>
