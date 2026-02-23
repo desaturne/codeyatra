@@ -1,16 +1,80 @@
-# React + Vite
+# AASHA Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for AASHA, a maternal and child health records system with inventory management. It is built with an offline-first architecture to ensure functionality even in areas with poor internet connectivity.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19**: UI library.
+- **Vite**: Fast build tool and development server.
+- **Tailwind CSS**: Utility-first CSS framework for styling.
+- **Zustand**: Lightweight state management.
+- **Dexie.js**: IndexedDB wrapper for offline data storage.
+- **React Router DOM**: Application routing.
+- **i18next**: Internationalization (supports English and Nepali).
+- **jsPDF**: PDF report generation.
+- **Axios**: HTTP client for API requests.
+- **Lucide React**: Icon library.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Offline-First Architecture**: Uses IndexedDB (via Dexie.js) to store inventory and patient records locally. Changes made offline are queued and automatically synchronized with the backend when the connection is restored.
+- **Bilingual Support**: Full support for English and Nepali languages.
+- **Authentication**: Secure login and registration flows.
+- **Dashboard & Visualisation**: Overview of health records and inventory status.
+- **Patient Registration**: Dedicated forms for registering maternal and child health records.
+- **Inventory Tracker**: Manage medicines and supplies, track stock levels, and monitor expiry dates.
+- **PDF Reports**: Generate downloadable PDF reports for records and inventory.
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/components/`: Reusable UI components and layouts.
+- `src/pages/`: Application pages (Dashboard, Login, Register, Tracker, etc.).
+- `src/routes/`: Route definitions and protected route wrappers.
+- `src/store/`: Zustand stores for global state management (`useAuthStore`, `useInventoryStore`).
+- `src/lib/`: Core libraries and utilities:
+  - `axios.js`: Configured Axios instance.
+  - `db.js`: Dexie.js database configuration for offline storage.
+  - `sync.js`: Logic for synchronizing offline data with the backend.
+- `src/i18n/`: Internationalization configuration and translation files.
+- `public/assets/`: Static assets like images and icons.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+
+### Installation
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   Create a `.env` file in the `frontend` directory and add the necessary variables (e.g., API base URL):
+   ```env
+   VITE_API_URL="http://localhost:5000/api"
+   ```
+
+### Running the Application
+
+- **Development mode**:
+  ```bash
+  npm run dev
+  ```
+- **Build for production**:
+  ```bash
+  npm run build
+  ```
+- **Preview production build**:
+  ```bash
+  npm run preview
+  ```
+
+The development server will typically start on `http://localhost:5173`.
