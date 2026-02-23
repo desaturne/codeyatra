@@ -2,13 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
-import db from "../lib/db";
-import useInventoryStore from "../store/useInventoryStore";
+import api from "../lib/axios";
 import Mascot from "../components/Mascot";
 
 function AddMedicine() {
     const navigate = useNavigate();
-    const { setItems } = useInventoryStore();
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         name: "",
@@ -33,25 +31,12 @@ function AddMedicine() {
                 stock: parseInt(form.stock, 10),
                 threshold: 10,
                 expiryDate: form.expiryDate,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
             };
-
-            const id = await db.inventory.add(payload);
-            await db.syncQueue.add({
-                operation: "POST",
-                table: "inventory",
-                recordId: id,
-                payload,
-                createdAt: new Date().toISOString(),
-            });
-
-            const updatedItems = await db.inventory.toArray();
-            setItems(updatedItems);
+            await api.post("/inventory", payload);
             toast.success("Medicine added successfully");
             navigate("/tracker");
-        } catch {
-            toast.error("Something went wrong");
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Something went wrong");
         } finally {
             setLoading(false);
         }

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
 import api from "../lib/axios";
+import api from "../lib/axios";
 
 function Signup() {
   const { t } = useTranslation();
@@ -25,16 +26,11 @@ function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post("/auth/signup", {
-        name: form.name,
-        dob: form.dob,
-        email: form.email,
-        password: form.password,
-      });
-      toast.success("Account created! Please sign in.");
+      await api.post("/auth/signup", form);
+      toast.success("Account Verified! You may now sign in.");
       navigate("/signin");
-    } catch (error) {
-      toast.error(error.response?.data?.message || t("toast.error"));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || t("toast.error"));
     } finally {
       setLoading(false);
     }
