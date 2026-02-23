@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { Eye, LogOut } from "lucide-react";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
@@ -55,6 +55,14 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      <button
+        onClick={() => navigate("/info")}
+        className="fixed bottom-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white text-[#5E503C] shadow-lg hover:bg-gray-50 transition-colors z-50"
+        aria-label="Information"
+      >
+        <Eye size={24} />
+      </button>
     </div>
   );
 }
