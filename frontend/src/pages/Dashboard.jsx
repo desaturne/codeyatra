@@ -1,15 +1,34 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, LogOut } from "lucide-react";
+import { Eye, LogOut, RefreshCw } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
 import db from "../lib/db";
+import { flushSyncQueue } from "../lib/sync";
 
 function Dashboard() {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const result = await flushSyncQueue();
+      if (result.synced === 0) {
+        toast("Everything is already synced");
+      } else {
+        toast.success(`Synced ${result.synced} item(s) to server`);
+      }
+    } catch {
+      toast.error("Sync failed. Check your connection.");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const formatDate = (value) => {
     if (!value) return "";
@@ -312,6 +331,14 @@ function Dashboard() {
                 className="h-10 w-28 px-5 bg-white text-[#3E3425] font-semibold rounded-full text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors"
               >
                 Export PDF
+              </button>
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="h-10 w-28 px-5 bg-[#5E503C] text-white font-semibold rounded-full text-sm uppercase tracking-wider hover:bg-[#4a3f30] transition-colors flex items-center justify-center gap-1 disabled:opacity-60"
+              >
+                <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
+                {syncing ? "Syncing" : "Sync"}
               </button>
             </div>
           </div>

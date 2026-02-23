@@ -9,10 +9,14 @@ import syncRoutes from "./modules/sync/sync.routes.js";
 
 dotenv.config();
 
+
+
 const app = express();
 
 app.use(cors());
+
 app.use(express.json());
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);

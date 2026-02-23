@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
+import api from "../lib/axios";
+import { flushSyncQueue } from "../lib/sync";
 
 function Login() {
   const { t } = useTranslation();
@@ -17,12 +19,13 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const mockToken = btoa(`${email}:${Date.now()}`);
-      setToken(mockToken);
-      setUser({ email, name: email.split("@")[0] });
+      const response = await api.post("/auth/login", { email, password });
+      setToken(response.data.token);
+      setUser(response.data.user);
+      flushSyncQueue().catch(() => {});
       navigate("/");
-    } catch {
-      toast.error(t("login.error"));
+    } catch (error) {
+      toast.error(error.response?.data?.message || t("login.error"));
     } finally {
       setLoading(false);
     }
