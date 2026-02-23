@@ -18,3 +18,12 @@ export const createPatient = async (req, res) => {
     return res.status(code).json({ message: err.message || "Bad request" });
   }
 };
+
+export const sendHighRiskAlerts = async (req, res) => {
+  try {
+    const result = await patientsService.sendHighRiskAlerts(req.user.id);
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Server error" });
+  }
+};

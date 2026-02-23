@@ -100,3 +100,48 @@ export const create = async (data, userId) => {
     return created;
   });
 };
+
+/**
+ * Get high-risk maternal patients and send alerts
+ * A maternal patient is high-risk if they have one or more symptoms
+ */
+export const sendHighRiskAlerts = async (userId) => {
+  // Get all maternal patients for this user
+  const maternalPatients = await prisma.patient.findMany({
+    where: { 
+      userId: Number(userId),
+      type: "maternal"
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Filter high-risk patients (those with symptoms)
+  const highRiskPatients = maternalPatients.filter(
+    patient => Array.isArray(patient.symptoms) && patient.symptoms.length > 0
+  );
+
+  // Simulate sending SMS to each high-risk patient
+  // In production, integrate with Twilio, AWS SNS, or similar
+  const alertLog = highRiskPatients.map(patient => {
+    // Placeholder: In production, call SMS API here
+    // Example: await twilioClient.messages.create({...})
+    
+    return {
+      patientId: patient.id,
+      patientName: patient.name,
+      contactNumber: patient.contactNumber || "Not provided",
+      symptoms: patient.symptoms,
+      riskLevel: patient.symptoms.length >= 3 ? "HIGH" : "MODERATE",
+      status: "sent", // Would be actual API response in production
+      sentAt: new Date().toISOString(),
+      message: `URGENT: ${patient.name}, you have been identified as high-risk. Please contact your healthcare provider immediately. Symptoms detected: ${patient.symptoms.join(", ")}`
+    };
+  });
+
+  return {
+    totalMaternalPatients: maternalPatients.length,
+    highRiskCount: highRiskPatients.length,
+    alertsSent: alertLog.length,
+    alerts: alertLog
+  };
+};

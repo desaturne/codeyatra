@@ -10,7 +10,7 @@ function getRowStatus(item) {
   const expiry = new Date(item.expiryDate);
   const daysUntilExpiry = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
   if (daysUntilExpiry <= 0) return "expired";
-  if (daysUntilExpiry <= 30) return "nearExpiry";
+  if (daysUntilExpiry <= 14) return "nearExpiry";
   return "normal";
 }
 
