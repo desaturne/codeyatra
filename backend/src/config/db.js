@@ -55,21 +55,21 @@ export const connectDatabase = async () => {
   try {
     const info = getDbInfo();
     if (info) {
-      console.log(`🧩 DB target: ${info.host}${info.port ? `:${info.port}` : ""}/${info.database || ""}`);
+      console.log(`DB target: ${info.host}${info.port ? `:${info.port}` : ""}/${info.database || ""}`);
     }
-    console.log("🔍 Testing PostgreSQL connection...");
+    console.log("Testing PostgreSQL connection...");
     await pool.query('SELECT NOW()');
-    console.log("✅ PostgreSQL connection successful");
+    console.log("PostgreSQL connection successful");
     
-    console.log("🔍 Testing Prisma Client connection...");
+    console.log("Testing Prisma Client connection...");
     await prisma.$connect();
-    console.log("✅ Prisma Client connected successfully");
+    console.log("Prisma Client connected successfully");
     
     return true;
   } catch (error) {
-    console.error("❌ Database connection failed:", error.message);
-    console.error("📝 Please check your DATABASE_URL in .env file");
-    console.error("📝 Current DATABASE_URL format: postgresql://user:password@host:port/database");
+    console.error("Database connection failed:", error.message);
+    console.error("Please check your DATABASE_URL in .env file");
+    console.error("Current DATABASE_URL format: postgresql://user:password@host:port/database");
     return false;
   }
 };
