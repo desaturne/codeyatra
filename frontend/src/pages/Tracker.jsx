@@ -1,10 +1,8 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft, Plus, Minus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import db from "../lib/db";
-import useInventoryStore from "../store/useInventoryStore";
+import api from "../lib/axios";
 import Mascot from "../components/Mascot";
 
 function getRowStatus(item) {
@@ -18,24 +16,19 @@ function getRowStatus(item) {
 
 function Tracker() {
   const navigate = useNavigate();
-  const items = useLiveQuery(() => db.inventory.toArray()) || [];
-  const { setItems } = useInventoryStore();
+  const [items, setItems] = useState([]);
   const [longPressId, setLongPressId] = useState(null);
   const longPressTimer = useRef(null);
   const isLongPress = useRef(false);
 
+  useEffect(() => {
+    api.get("/inventory").then((r) => setItems(r.data)).catch(() => toast.error("Failed to load inventory"));
+  }, []);
+
   const handleDelete = async (id) => {
     try {
-      await db.inventory.delete(id);
-      await db.syncQueue.add({
-        operation: "DELETE",
-        table: "inventory",
-        recordId: id,
-        payload: null,
-        createdAt: new Date().toISOString(),
-      });
-      const updatedItems = await db.inventory.toArray();
-      setItems(updatedItems);
+      await api.delete(`/inventory/${id}`);
+      setItems((prev) => prev.filter((item) => item.id !== id));
       setLongPressId(null);
       toast.success("Deleted successfully");
     } catch {
@@ -45,23 +38,15 @@ function Tracker() {
 
   const handleStockChange = useCallback(async (id, delta) => {
     try {
-      const item = await db.inventory.get(id);
+      const item = items.find((i) => i.id === id);
       if (!item) return;
       const newStock = Math.max(0, item.stock + delta);
-      await db.inventory.update(id, { stock: newStock, updatedAt: new Date().toISOString() });
-      await db.syncQueue.add({
-        operation: "PUT",
-        table: "inventory",
-        recordId: id,
-        payload: { stock: newStock },
-        createdAt: new Date().toISOString(),
-      });
-      const updatedItems = await db.inventory.toArray();
-      setItems(updatedItems);
+      await api.put(`/inventory/${id}`, { stock: newStock });
+      setItems((prev) => prev.map((i) => i.id === id ? { ...i, stock: newStock } : i));
     } catch {
       toast.error("Something went wrong");
     }
-  }, [setItems]);
+  }, [items]);
 
   const startLongPress = useCallback((id) => {
     isLongPress.current = false;

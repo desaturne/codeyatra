@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
-import { useLiveQuery } from "dexie-react-hooks";
-import db from "../lib/db";
+import api from "../lib/axios";
 import Mascot from "../components/Mascot";
 
 const SYMPTOMS_LIST = [
@@ -20,7 +19,11 @@ function MaternalRegister() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const inventoryItems = useLiveQuery(() => db.inventory.toArray()) || [];
+  const [inventoryItems, setInventoryItems] = useState([]);
+
+  useEffect(() => {
+    api.get("/inventory").then((r) => setInventoryItems(r.data)).catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -74,48 +77,27 @@ function MaternalRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const record = {
-        ...form,
+      const payload = {
+        name: form.name,
         type: "maternal",
         age: form.age ? parseInt(form.age, 10) : null,
-        createdAt: new Date().toISOString(),
+        contactNumber: form.contactNumber || null,
+        wardToleNo: form.wardToleNo || null,
+        husbandName: form.husbandName || null,
+        lastMenstrualPeriod: form.lastMenstrualPeriod || null,
+        parity: form.parity || null,
+        pregnancyMonth: form.pregnancyMonth || null,
+        weight: form.weight || null,
+        bloodPressure: form.bloodPressure || null,
+        symptoms: form.symptoms,
+        medicineId: form.medicinesProvided.length > 0 ? form.medicinesProvided[0] : null,
       };
-
-      const patientId = await db.patients.add(record);
-
-      await db.syncQueue.add({
-        operation: "POST",
-        table: "patients",
-        recordId: patientId,
-        payload: record,
-        createdAt: new Date().toISOString(),
-      });
-
-      // Deduct stock for selected medicines
-      for (const medicineId of form.medicinesProvided) {
-        const item = await db.inventory.get(medicineId);
-        if (item && item.stock > 0) {
-          const newStock = item.stock - 1;
-          await db.inventory.update(medicineId, {
-            stock: newStock,
-            updatedAt: new Date().toISOString()
-          });
-          await db.syncQueue.add({
-            operation: "PUT",
-            table: "inventory",
-            recordId: medicineId,
-            payload: { stock: newStock },
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
-
+      await api.post("/patients", payload);
       toast.success(t("Successfully Registered Maternal Data"));
       navigate("/");
-    } catch {
-      toast.error(t("toast.error"));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || t("toast.error"));
     } finally {
       setLoading(false);
     }

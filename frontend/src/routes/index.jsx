@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import AuthLayout from "../components/AuthLayout";
 import Welcome from "../pages/Welcome";
 import Login from "../pages/Login";
-import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import Tracker from "../pages/Tracker";
 import AddMedicine from "../pages/AddMedicine";
@@ -11,6 +10,7 @@ import Register from "../pages/Register";
 import MaternalRegister from "../pages/MaternalRegister";
 import ChildRegister from "../pages/ChildRegister";
 import Info from "../pages/Info";
+import Visualisation from "../pages/Visualisation";
 import ProtectedRoute from "./ProtectedRoute";
 import useAuthStore from "../store/useAuthStore";
 
@@ -31,7 +31,7 @@ function AppRoutes() {
         },
         {
           path: "/signup",
-          element: token ? <Navigate to="/" replace /> : <Signup />,
+          element: <Navigate to="/signin" replace />,
         },
       ],
     },
@@ -91,6 +91,14 @@ function AppRoutes() {
           element: (
             <ProtectedRoute>
               <Info />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/visualisation",
+          element: (
+            <ProtectedRoute>
+              <Visualisation />
             </ProtectedRoute>
           ),
         },
