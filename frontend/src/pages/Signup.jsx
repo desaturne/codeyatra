@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
+import api from "../lib/axios";
 
 function Signup() {
   const { t } = useTranslation();
@@ -24,11 +25,16 @@ function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Removed automatic login setting to force user to sign in
-      toast.success("Account Verified! You may now sign in.");
+      await api.post("/auth/signup", {
+        name: form.name,
+        dob: form.dob,
+        email: form.email,
+        password: form.password,
+      });
+      toast.success("Account created! Please sign in.");
       navigate("/signin");
-    } catch {
-      toast.error(t("toast.error"));
+    } catch (error) {
+      toast.error(error.response?.data?.message || t("toast.error"));
     } finally {
       setLoading(false);
     }
