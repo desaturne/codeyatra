@@ -13,13 +13,6 @@ function Dashboard() {
     logout();
     navigate("/welcome");
   };
-  const { logout } = useAuthStore();
-
-  const handleLogout = () => {
-    toast.success("You're logging out. You need to sign back in!");
-    logout();
-    navigate("/welcome");
-  };
 
   return (
     <div className="h-screen bg-[#D6CDB8] flex flex-col overflow-hidden">
