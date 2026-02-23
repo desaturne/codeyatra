@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, useRoutes } from "react-router-dom";
 import AppRoutes from "./routes";
 import useAuthStore from "./store/useAuthStore";
+import { flushSyncQueue } from "./lib/sync";
 import "./i18n";
 
 function RoutesRenderer() {
@@ -10,10 +11,15 @@ function RoutesRenderer() {
 }
 
 function App() {
-  const { setOnline } = useAuthStore();
+  const { setOnline, token } = useAuthStore();
 
   useEffect(() => {
-    const handleOnline = () => setOnline(true);
+    const handleOnline = () => {
+      setOnline(true);
+      if (token) {
+        flushSyncQueue().catch(() => {});
+      }
+    };
     const handleOffline = () => setOnline(false);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -21,7 +27,7 @@ function App() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [setOnline]);
+  }, [setOnline, token]);
 
   return (
     <BrowserRouter>
