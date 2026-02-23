@@ -1,82 +1,84 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Mascot from "../components/Mascot";
 
+// prettier-ignore
 function Info() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    return (
-        <div className="h-screen bg-[#D6CDB8] flex flex-col overflow-hidden">
-            {/* Header */}
-            <header className="flex items-center px-6 py-6 shrink-0 max-w-lg mx-auto w-full">
-                <button
-                    onClick={() => navigate("/")}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-[#5E503C] shadow-sm hover:bg-gray-50 transition-colors mr-4"
-                    aria-label="Go back"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-xl font-bold text-[#3E3425] uppercase tracking-wider flex-1 text-center pr-10">
-                    App Workflow
-                </h1>
-            </header>
+  const sectionHeadingStyle = { fontSize: "0.8rem", fontWeight: 800, color: "#F5F0EB", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid rgba(245,240,235,0.25)", paddingBottom: "8px", marginBottom: "12px" };
+  const bodyTextStyle = { fontSize: "0.875rem", lineHeight: 1.65, color: "rgba(245,240,235,0.9)" };
+  const cardStyle = { background: "rgba(0,0,0,0.15)", borderRadius: "12px", padding: "14px 16px" };
+  const cardTitleStyle = { fontSize: "0.8rem", fontWeight: 700, color: "#F5F0EB", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" };
+  const cardBodyStyle = { fontSize: "0.875rem", lineHeight: 1.6, color: "rgba(245,240,235,0.85)" };
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto px-6 pb-8 max-w-lg mx-auto w-full">
-                <div className="bg-[#5E503C] rounded-3xl p-6 shadow-md text-[#F5F0EB]">
+  return (
+    <div style={{ height: "100dvh", background: "#D6CDB8", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 8px 16px", maxWidth: "32rem", margin: "0 auto", width: "100%", flexShrink: 0 }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{ width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "#fff", color: "#5E503C", border: "none", boxShadow: "0 1px 2px rgba(0,0,0,0.1)", cursor: "pointer" }}
+          aria-label="Go back"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <img src="/assets/logo.png" alt="AASHA" style={{ height: "60px", width: "60px", objectFit: "contain" }} />
+      </div>
 
-                    <div className="mb-6">
-                        <h2 className="text-lg font-bold mb-2 uppercase tracking-wide border-b border-[#F5F0EB]/30 pb-2">
-                            1. Dashboard (Home)
-                        </h2>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/90">
-                            The Dashboard is the central hub. It provides quick access to the main APP functions:
-                            <br />• <strong>REGISTER</strong>: Enroll and track patients.
-                            <br />• <strong>TRACKER</strong>: Manage your Medicine and Supplies Inventory.
-                        </p>
-                    </div>
-
-                    <div className="mb-6">
-                        <h2 className="text-lg font-bold mb-2 uppercase tracking-wide border-b border-[#F5F0EB]/30 pb-2">
-                            2. Registration Module
-                        </h2>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/90 mb-3">
-                            Allows health workers to enroll patients. There are two primary types:
-                        </p>
-                        <h3 className="font-semibold text-base mb-1">Maternal Register</h3>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/80 mb-3 pl-2 border-l-2 border-[#D6CDB8]/30">
-                            Tracks pregnant mothers. Captures Personal Details, Pregnancy History, Health & Risks (Weight, BP), Danger Symptoms check, and keeps track of Medicines Provided.
-                        </p>
-                        <h3 className="font-semibold text-base mb-1">Child Register</h3>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/80 pl-2 border-l-2 border-[#D6CDB8]/30">
-                            Tracks children and newborns. Captures Birth Details, Nutrition Metrics (MUAC), Vaccination History, and Medicines Provided.
-                        </p>
-                    </div>
-
-                    <div className="mb-6">
-                        <h2 className="text-lg font-bold mb-2 uppercase tracking-wide border-b border-[#F5F0EB]/30 pb-2">
-                            3. Inventory Tracker
-                        </h2>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/90">
-                            Ensures clinics do not run out of essential supplies.
-                            <br />• <strong>View Stock</strong>: See all available medicines.
-                            <br />• <strong>Add Medicine</strong>: Add newly arrived stock effortlessly.
-                            <br />• <strong>Automated Stock</strong>: Providing medicines in Registration automatically deducts from your Tracker inventory.
-                        </p>
-                    </div>
-
-                    <div>
-                        <h2 className="text-lg font-bold mb-2 uppercase tracking-wide border-b border-[#F5F0EB]/30 pb-2">
-                            4. Offline Secure Sync
-                        </h2>
-                        <p className="text-sm leading-relaxed text-[#F5F0EB]/90">
-                            AASHA is designed to work seamlessly in low-connectivity areas. All data is securely stored locally and seamlessly synced online whenever internet is available.
-                        </p>
-                    </div>
-
-                </div>
-            </div>
+      <div style={{ display: "flex", alignItems: "center", padding: "16px 24px 20px 24px", maxWidth: "32rem", margin: "0 auto", width: "100%", flexShrink: 0, gap: "8px" }}>
+        <div style={{ width: "96px", height: "96px", flexShrink: 0 }}>
+          <Mascot size="sm" />
         </div>
-    );
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#3E3425", lineHeight: 1.15, letterSpacing: "0.05em", textAlign: "center", flex: 1, paddingTop: "8px" }}>
+          APP<br />WORKFLOW
+        </h1>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", maxWidth: "32rem", margin: "0 auto", width: "100%", padding: "0 20px 24px 20px" }}>
+        <div style={{ flex: 1, minHeight: 0, background: "#5E503C", borderRadius: "24px", overflowY: "auto", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", msOverflowStyle: "none" }}>
+          <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "28px" }}>
+
+            <section>
+              <h2 style={sectionHeadingStyle}>1. Dashboard</h2>
+              <p style={bodyTextStyle}>
+                Your home screen. Tap <strong>Register</strong> to add a new patient, or <strong>Tracker</strong> to check your medicine stock.
+              </p>
+            </section>
+
+            <section>
+              <h2 style={sectionHeadingStyle}>2. Register</h2>
+              <p style={{ ...bodyTextStyle, marginBottom: "12px" }}>Two types of patients you can register:</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={cardStyle}>
+                  <p style={cardTitleStyle}>Maternal</p>
+                  <p style={cardBodyStyle}>For pregnant mothers — records personal info, pregnancy history, weight, BP, danger symptoms, and medicines given.</p>
+                </div>
+                <div style={cardStyle}>
+                  <p style={cardTitleStyle}>Child</p>
+                  <p style={cardBodyStyle}>For children and newborns — records birth details, MUAC, vaccination history, and medicines given.</p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 style={sectionHeadingStyle}>3. Tracker</h2>
+              <p style={bodyTextStyle}>
+                Keeps track of your medicine stock. Use the <strong>+</strong> button to add new stock. When you give a medicine during registration, it automatically deducts from here — so your count stays accurate without any extra work.
+              </p>
+            </section>
+
+            <section>
+              <h2 style={sectionHeadingStyle}>4. Works Offline</h2>
+              <p style={bodyTextStyle}>
+                No internet? No problem. Everything saves to your device and syncs automatically once you're back online.
+              </p>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Info;
