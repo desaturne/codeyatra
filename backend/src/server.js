@@ -15,20 +15,20 @@ const port = Number(process.env.PORT) || 3000;
 
 const startServer = async () => {
   try {
-    // Check database connection
+    
     const isConnected = await connectDatabase();
     
     if (!isConnected) {
-      console.error("❌ Failed to connect to database. Please check your DATABASE_URL in .env file");
+      console.error("Failed to connect to database. Please check your DATABASE_URL in .env file");
       process.exit(1);
     }
 
-    // Start the Express server
+    
     const server = app.listen(port, () => {
-      console.log(`🚀 API server listening on port ${port}`);
+      console.log(`API server listening on port ${port}`);
     });
 
-    // Graceful shutdown
+    
     process.on('SIGTERM', async () => {
       console.log('SIGTERM received, closing server gracefully...');
       server.close(async () => {
@@ -46,7 +46,7 @@ const startServer = async () => {
     });
 
   } catch (error) {
-    console.error("❌ Error starting server:", error);
+    console.error("Error starting server:", error);
     await disconnectDatabase();
     process.exit(1);
   }
