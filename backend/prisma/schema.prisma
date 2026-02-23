@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  dob       DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  patients  Patient[]
+  
+  @@map("users")
+}
+
+// Inventory model for medicine/supplies management
+model Inventory {
+  id         Int       @id @default(autoincrement())
+  name       String
+  stock      Int
+  threshold  Int
+  expiryDate DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  // Relations
+  patients   Patient[]
+  
+  @@map("inventory")
+}
+
+// Patient model for maternal and child health records
+model Patient {
+  id         Int        @id @default(autoincrement())
+  name       String
+  type       String     // "maternal" or "child"
+  quantity   Int        @default(1)
+  medicineId Int?
+  userId     Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  // Maternal-specific fields
+  age                  Int?
+  contactNumber        String?
+  wardToleNo           String?
+  husbandName          String?
+  lastMenstrualPeriod  String?
+  parity               String?
+  pregnancyMonth       String?
+  weight               String?
+  bloodPressure        String?
+  symptoms             String[]
+
+  // Child-specific fields
+  dob                  String?
+  gender               String?
+  birthWeight          String?
+  muac                 String?
+  breastfeedingStatus  String?
+  vaccines             String[]
+
+  // Relations
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medicine   Inventory? @relation(fields: [medicineId], references: [id], onDelete: SetNull)
+  
+  @@map("patients")
+}
