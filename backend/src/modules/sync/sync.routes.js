@@ -7,6 +7,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.post("/", syncController.bulkSync);
-
+router.put("/:table/:id", syncController.updateOne);
+router.delete("/:table/:id", syncController.deleteOne);
 
 export default router;

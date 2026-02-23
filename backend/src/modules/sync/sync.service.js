@@ -90,3 +90,80 @@ export const bulkSync = async (operations, userId) => {
 
   return { message: "Sync completed", processed: results.length, results };
 };
+
+export const updateOne = async (table, id, data, userId) => {
+  if (!Number.isInteger(id) || id <= 0) throw httpError(400, "id must be a positive integer");
+
+  if (table === "inventory") {
+    const existing = await prisma.inventory.findUnique({ where: { id } });
+    if (!existing) throw httpError(404, "Inventory item not found");
+
+    const updated = await prisma.inventory.update({
+      where: { id },
+      data: {
+        name: data.name !== undefined ? String(data.name).trim() : undefined,
+        stock: data.stock !== undefined ? Number(data.stock) : undefined,
+        threshold: data.threshold !== undefined ? Number(data.threshold) : undefined,
+        expiryDate: data.expiryDate !== undefined ? new Date(data.expiryDate) : undefined,
+      },
+    });
+    return { ok: true, action: "inventory:PUT", id: updated.id, data: updated };
+  }
+
+  if (table === "patients") {
+    const existing = await prisma.patient.findUnique({ where: { id } });
+    if (!existing) throw httpError(404, "Patient not found");
+    if (existing.userId !== Number(userId)) throw httpError(403, "Forbidden");
+
+    const patch = {};
+    if (data.name !== undefined) patch.name = String(data.name).trim();
+
+    // Maternal fields
+    if (data.age !== undefined) patch.age = Number(data.age);
+    if (data.contactNumber !== undefined) patch.contactNumber = String(data.contactNumber);
+    if (data.wardToleNo !== undefined) patch.wardToleNo = String(data.wardToleNo);
+    if (data.husbandName !== undefined) patch.husbandName = String(data.husbandName);
+    if (data.lastMenstrualPeriod !== undefined) patch.lastMenstrualPeriod = String(data.lastMenstrualPeriod);
+    if (data.parity !== undefined) patch.parity = String(data.parity);
+    if (data.pregnancyMonth !== undefined) patch.pregnancyMonth = String(data.pregnancyMonth);
+    if (data.weight !== undefined) patch.weight = String(data.weight);
+    if (data.bloodPressure !== undefined) patch.bloodPressure = String(data.bloodPressure);
+    if (data.symptoms !== undefined) patch.symptoms = Array.isArray(data.symptoms) ? data.symptoms : [];
+
+    // Child fields
+    if (data.dob !== undefined) patch.dob = String(data.dob);
+    if (data.gender !== undefined) patch.gender = String(data.gender);
+    if (data.birthWeight !== undefined) patch.birthWeight = String(data.birthWeight);
+    if (data.muac !== undefined) patch.muac = String(data.muac);
+    if (data.breastfeedingStatus !== undefined) patch.breastfeedingStatus = String(data.breastfeedingStatus);
+    if (data.vaccines !== undefined) patch.vaccines = Array.isArray(data.vaccines) ? data.vaccines : [];
+
+    const updated = await prisma.patient.update({ where: { id }, data: patch });
+    return { ok: true, action: "patients:PUT", id: updated.id, data: updated };
+  }
+
+  throw httpError(400, `Invalid table: ${table}. Must be 'inventory' or 'patients'`);
+};
+
+export const deleteOne = async (table, id, userId) => {
+  if (!Number.isInteger(id) || id <= 0) throw httpError(400, "id must be a positive integer");
+
+  if (table === "inventory") {
+    const existing = await prisma.inventory.findUnique({ where: { id } });
+    if (!existing) throw httpError(404, "Inventory item not found");
+
+    await prisma.inventory.delete({ where: { id } });
+    return { ok: true, action: "inventory:DELETE", id };
+  }
+
+  if (table === "patients") {
+    const existing = await prisma.patient.findUnique({ where: { id } });
+    if (!existing) throw httpError(404, "Patient not found");
+    if (existing.userId !== Number(userId)) throw httpError(403, "Forbidden");
+
+    await prisma.patient.delete({ where: { id } });
+    return { ok: true, action: "patients:DELETE", id };
+  }
+
+  throw httpError(400, `Invalid table: ${table}. Must be 'inventory' or 'patients'`);
+};
