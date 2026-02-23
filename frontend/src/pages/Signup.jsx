@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Mascot from "../components/Mascot";
 import api from "../lib/axios";
+import api from "../lib/axios";
 
 function Signup() {
   const { t } = useTranslation();
