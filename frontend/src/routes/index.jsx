@@ -10,6 +10,7 @@ import AddMedicine from "../pages/AddMedicine";
 import Register from "../pages/Register";
 import MaternalRegister from "../pages/MaternalRegister";
 import ChildRegister from "../pages/ChildRegister";
+import Info from "../pages/Info";
 import ProtectedRoute from "./ProtectedRoute";
 import useAuthStore from "../store/useAuthStore";
 
@@ -82,6 +83,14 @@ function AppRoutes() {
           element: (
             <ProtectedRoute>
               <ChildRegister />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/info",
+          element: (
+            <ProtectedRoute>
+              <Info />
             </ProtectedRoute>
           ),
         },

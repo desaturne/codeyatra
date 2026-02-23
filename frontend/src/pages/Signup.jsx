@@ -24,10 +24,9 @@ function Signup() {
     e.preventDefault();
     setLoading(true);
     try {
-      const mockToken = btoa(`${form.email}:${Date.now()}`);
-      setToken(mockToken);
-      setUser({ email: form.email, name: form.name });
-      navigate("/");
+      // Removed automatic login setting to force user to sign in
+      toast.success("Account Verified! You may now sign in.");
+      navigate("/signin");
     } catch {
       toast.error(t("toast.error"));
     } finally {

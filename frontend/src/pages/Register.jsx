@@ -1,9 +1,51 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CloudUpload } from "lucide-react";
+import { useLiveQuery } from "dexie-react-hooks";
+import toast from "react-hot-toast";
 import Mascot from "../components/Mascot";
+import db from "../lib/db";
+import api from "../lib/axios";
 
 function Register() {
   const navigate = useNavigate();
+  const [syncing, setSyncing] = useState(false);
+  const pendingItems = useLiveQuery(() => db.syncQueue.toArray()) || [];
+  const pendingCount = pendingItems.length;
+
+  const handleSync = async () => {
+    if (syncing || pendingCount === 0) return;
+    setSyncing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const item of pendingItems) {
+      try {
+        if (item.operation === "POST") {
+          await api.post(`/${item.table}`, item.payload);
+        } else if (item.operation === "PUT") {
+          await api.put(`/${item.table}/${item.recordId}`, item.payload);
+        } else if (item.operation === "DELETE") {
+          await api.delete(`/${item.table}/${item.recordId}`);
+        }
+        await db.syncQueue.delete(item.id);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setSyncing(false);
+    if (successCount > 0 && failCount === 0) {
+      toast.success(
+        `Synced ${successCount} record${successCount > 1 ? "s" : ""}`,
+      );
+    } else if (successCount > 0 && failCount > 0) {
+      toast.success(`Synced ${successCount}, failed ${failCount}`);
+    } else {
+      toast.error("Sync failed. Check your connection.");
+    }
+  };
 
   return (
     <div className="h-screen bg-[#D6CDB8] flex flex-col overflow-hidden">
@@ -42,6 +84,26 @@ function Register() {
               className="w-60 h-12 py-4 bg-white text-[#3E3425] font-bold rounded-full text-base uppercase tracking-wider hover:bg-gray-100 transition-colors"
             >
               CHILD
+            </button>
+
+            <button
+              onClick={handleSync}
+              disabled={syncing || pendingCount === 0}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all mt-1 ${
+                pendingCount > 0 && !syncing
+                  ? "bg-[#5E503C]/10 text-[#5E503C] hover:bg-[#5E503C]/20"
+                  : "text-[#5E503C]/40 cursor-default"
+              }`}
+            >
+              <CloudUpload
+                size={16}
+                className={syncing ? "animate-pulse" : ""}
+              />
+              {syncing
+                ? "Syncing..."
+                : pendingCount > 0
+                  ? `Sync ${pendingCount} pending`
+                  : "All synced"}
             </button>
           </div>
         </div>
