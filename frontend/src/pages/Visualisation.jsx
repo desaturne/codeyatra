@@ -227,6 +227,7 @@ function Visualisation() {
   const [childHighRiskOnly, setChildHighRiskOnly] = useState(false);
   const [allPatients, setAllPatients] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [sendingAlerts, setSendingAlerts] = useState(false);
 
   useEffect(() => {
     api.get("/patients").then((r) => setAllPatients(r.data)).catch(() => toast.error("Failed to load patients"));
@@ -254,6 +255,60 @@ function Visualisation() {
     Array.isArray(p.vaccines) ? p.vaccines.length : 0,
     isChildHighRisk(p) ? "⚠ High Risk" : "✓ On Track",
   ]);
+
+  // Calculate high-risk maternal patients
+  const highRiskMaternalPatients = maternalAll.filter(isMaternalHighRisk);
+
+  // Handler for sending high-risk alerts
+  const handleSendHighRiskAlerts = async () => {
+    if (highRiskMaternalPatients.length === 0) {
+      toast.error("No high-risk maternal patients found");
+      return;
+    }
+
+    setSendingAlerts(true);
+    const loadingToast = toast.loading(`Sending alerts to ${highRiskMaternalPatients.length} high-risk patients...`);
+
+    try {
+      const response = await api.post("/patients/send-high-risk-alerts");
+      const { alertsSent, alerts } = response.data;
+
+      toast.dismiss(loadingToast);
+      
+      // Show success toast with count
+      toast.success(
+        `✅ Successfully sent ${alertsSent} alert${alertsSent !== 1 ? 's' : ''} to high-risk patients!`,
+        { duration: 5000 }
+      );
+
+      // Show individual patient notifications
+      if (alerts && alerts.length > 0) {
+        setTimeout(() => {
+          alerts.forEach((alert, index) => {
+            setTimeout(() => {
+              toast(
+                `📱 Alert sent to ${alert.patientName}\nRisk: ${alert.riskLevel}\nSymptoms: ${alert.symptoms.join(", ")}`,
+                {
+                  icon: "🚨",
+                  duration: 4000,
+                  style: {
+                    background: "#5E503C",
+                    color: "#F5F0EB",
+                    border: "2px solid #C9B99A",
+                  },
+                }
+              );
+            }, index * 1000); // Stagger notifications by 1 second
+          });
+        }, 500);
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(error.response?.data?.message || "Failed to send alerts");
+    } finally {
+      setSendingAlerts(false);
+    }
+  };
 
   // ── Export handlers (same logic as Dashboard) ──
 
@@ -520,17 +575,44 @@ function Visualisation() {
             </div>
           </div>
 
-          {/* High-risk note */}
-          <p
-            style={{
-              fontSize: "0.72rem",
-              color: "#C9B99A",
-              marginBottom: "14px",
-              fontStyle: "italic",
-            }}
-          >
-            High-risk filter shows patients with one or more reported symptoms.
-          </p>
+          {/* High-risk note and alert button */}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <p
+                style={{
+                  fontSize: "0.72rem",
+                  color: "#C9B99A",
+                  margin: 0,
+                  fontStyle: "italic",
+                }}
+              >
+                High-risk filter shows patients with one or more reported symptoms.
+              </p>
+              {highRiskMaternalPatients.length > 0 && (
+                <button
+                  onClick={handleSendHighRiskAlerts}
+                  disabled={sendingAlerts}
+                  style={{
+                    padding: "8px 16px",
+                    background: sendingAlerts ? "#7a6b54" : "#C9402A",
+                    color: "#F5F0EB",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    cursor: sendingAlerts ? "not-allowed" : "pointer",
+                    opacity: sendingAlerts ? 0.7 : 1,
+                    boxShadow: sendingAlerts ? "none" : "0 2px 4px rgba(0,0,0,0.2)",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {sendingAlerts ? "Sending..." : `🚨 Send Alerts (${highRiskMaternalPatients.length})`}
+                </button>
+              )}
+            </div>
+          </div>
 
           <ScrollTable
             headers={["Name", "Age", "Pregnancy Month", "Symptoms"]}

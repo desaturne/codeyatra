@@ -8,5 +8,6 @@ router.use(authMiddleware);
 
 router.get("/", patientsController.getAllPatients);
 router.post("/", patientsController.createPatient);
+router.post("/send-high-risk-alerts", patientsController.sendHighRiskAlerts);
 
 export default router;
